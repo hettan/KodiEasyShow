@@ -9,12 +9,14 @@ import rarfile
 XBMC_ADDR = "192.168.1.6"
 XBMC_PORT = "80"
 JSONRPC_VER = "2.0"
-TV_SHOW_PATH = "smb://FREENAS/data/Serier/"
+TV_SHOW_XBMC_PATH = "smb://FREENAS/data/Serier/"
 TV_SHOW_MNT_PATH = "/mnt/data_nas/Serier/"
 ACCEPTED_EXTENSIONS = ["mkv", "avi", "rar"]
 
 WORDS = []
 WORDS_MAPPING = {}
+
+#TODO, thread to update the shows
 
 def is_playable(file_path):
     return (len(file_path) > 3 and file_path[-3:] in ACCEPTED_EXTENSIONS)
@@ -42,11 +44,12 @@ def get_latest_file(path):
 def set_words(shows):
     for show in shows:
         for show_word in re.findall(r"[^ _\.]+", show):
+            show_word = str.upper(show_word)
             if show_word in WORDS_MAPPING.keys():
                 WORDS_MAPPING[show_word].append(show)
             else:
                 WORDS_MAPPING[show_word] = [show]
-            WORDS.append(str.upper(show_word))
+            WORDS.append(show_word)
 
     print("words=%s"%(str(WORDS)))
     print("words_mapping=%s"%(str(WORDS_MAPPING)))
@@ -62,22 +65,18 @@ def get_all_shows():
 
     return shows
 
-#Implement later
 def file_is_rar(file_path):
     return (len(file_path) > 4 and file_path[-4:] == ".rar")
 
 def rar_format(path, encoded_path):
     #Get the second last split, which usually is the filename without the extension
-    #real_filename = path.split(urllib.quote_plus("/"))[-2] + ".mkv"
     rar_info = rarfile.RarFile(path).infolist()
     
     #If more files then one just take first file
     if len(rar_info) > 1:
         print("WARNING! Multiple files in rar, only supports one. First file is used")
 
-    print rar_info[0].filename
     real_filename = rar_info[0].filename
-    #real_filename = real_filename"
         
     return "rar://%s/%s"%(encoded_path, real_filename)
 
@@ -89,12 +88,18 @@ def create_json_rpc(method, params):
 
     return json_data
 
-def play_file(path):
-    encoded_path = urllib.quote_plus(TV_SHOW_PATH + path)
+
+def get_xbmc_path(path):
+    """
+    Replaces the mnt path to the xbmc path
+    """
+    return TV_SHOW_XBMC_PATH + path[len(TV_SHOW_MNT_PATH):]
+
+def play_file(path):    
+    encoded_path = urllib.quote_plus(get_xbmc_path(path))
     if file_is_rar(path):
         encoded_path = rar_format(path, encoded_path)
     
-    print("encoded_path=%s"%(encoded_path))
     method = "Player.Open"
     params = {"item":{"file":encoded_path}}
     json_data = create_json_rpc(method, params)
@@ -102,7 +107,6 @@ def play_file(path):
 
 def send_to_xbmc(json_data):
     req = urllib2.Request("http://%s/jsonrpc"%(XBMC_ADDR))
-    print json_data
     req.add_header("Content-Type", "application/json")
     response = urllib2.urlopen(req, json.dumps(json_data))
 
@@ -110,8 +114,9 @@ def handle(text, mic, profile):
     found = False
     for word in WORDS:
         if bool(re.search(r'\b%s\b'%(word), text, re.IGNORECASE)):
-            mic.say("playing family guy")
-            main()
+            tv_show = WORDS_MAPPING[word][0]
+            mic.say("playing %s"%(tv_show))
+            play_file(get_latest_file(TV_SHOW_MNT_PATH+tv_show)[0])
             found = True
             break
 
@@ -119,16 +124,17 @@ def handle(text, mic, profile):
         mic.say("not found")
 
 def isValid(text):
-    return bool(re.search(r"\b(family|guy)\b", text, re.IGNORECASE))
+    search_shows = str.join("|", WORDS)
+    return bool(re.search(r"\b(%s)\b"%(search_shows), text, re.IGNORECASE))
 
 def main():
-    file_name = "Family Guy/S12/Family.Guy.S12E18.720p.HDTV.x264-REMARKABLE/family.guy.s12e18.720p.hdtv.x264-remarkable.rar"
-    #play_file(file_name)
-    shows = get_all_shows()
-    set_words(shows)
-    print("latest_file: %s"%(str(get_latest_file(TV_SHOW_MNT_PATH+shows[10]))))
-    play_file(get_latest_file(TV_SHOW_MNT_PATH+shows[10])[0])
+    play_file(get_latest_file(TV_SHOW_MNT_PATH+WORDS_MAPPING["FAMILY"][0])[0])
     print("done")
+
+#Run on load
+shows = get_all_shows()
+set_words(shows)
 
 if __name__ == "__main__":
     main()
+
