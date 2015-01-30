@@ -112,16 +112,24 @@ def send_to_xbmc(json_data):
 
 def handle(text, mic, profile):
     found = False
+    word_counter = {}
     for word in WORDS:
         if bool(re.search(r'\b%s\b'%(word), text, re.IGNORECASE)):
-            tv_show = WORDS_MAPPING[word][0]
-            mic.say("playing %s"%(tv_show))
-            play_file(get_latest_file(TV_SHOW_MNT_PATH+tv_show)[0])
-            found = True
-            break
-
-    if not found:
+            #tv_show = WORDS_MAPPING[word][0]
+            matched_shows = WORDS_MAPPING[word]
+            for show in matched_shows:
+                if show in word_counter:
+                    word_counter[show] += len(word)
+                else:
+                    word_counter[show] = len(word)
+   
+    if len(word_counter) == 0:
         mic.say("not found")
+    else:
+        most_matched_show = max(word_counter, key=word_counter.get)
+        mic.say("playing %s"%(most_matched_show))
+        play_file(get_latest_file(TV_SHOW_MNT_PATH+most_matched_show)[0])
+
 
 def isValid(text):
     search_shows = str.join("|", WORDS)
