@@ -10,14 +10,9 @@ WORDS = show_scanner.get_words()
 
 kodi_controller = KodiController()
 
-#TODO implement an algortihm for determinating the most matched from given words.
 def most_matched(text):
     word_counter = {}
     for word in WORDS:
-        #Skip words smaller then 4 chars
-        if(len(word) < 4):
-            continue
-
         if bool(re.search(r'\b%s\b'%(word), text, re.IGNORECASE)):
             matched_shows = show_scanner.match_shows(word)
             for show in matched_shows:
@@ -25,7 +20,6 @@ def most_matched(text):
                     word_counter[show] += len(word)
                 else:
                     word_counter[show] = len(word)
-    print word_counter
 
     #Nothing found
     if len(word_counter) == 0:

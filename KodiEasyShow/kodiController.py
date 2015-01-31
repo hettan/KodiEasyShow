@@ -15,7 +15,8 @@ class KodiController():
         
         #If more files then one just take first file
         if len(rar_info) > 1:
-            print("WARNING! Multiple files in rar, only supports one. First file is used")
+            print("WARNING! Multiple files in rar, "
+                  "only supports one. First file is used")
 
         real_filename = rar_info[0].filename
         path = urllib.quote_plus(self._get_kodi_path(path))
@@ -35,10 +36,11 @@ class KodiController():
         """
         return config.SHOW_KODI_PATH + path[len(config.SHOW_MNT_PATH):]
 
-    """
-    Send a play request to kodi for given path
-    """
     def play_file(self, path):    
+        """
+        Send a play request to kodi for given path
+        """
+    
         if self._file_is_rar(path):
             path = self._rar_format(path)
         else:

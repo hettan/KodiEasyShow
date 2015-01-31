@@ -16,7 +16,8 @@ class ShowScanner():
         self._update_shows()
 
     def _is_playable(self, file_path):
-        return (len(file_path) > 3 and file_path[-3:] in self._ACCEPTED_EXTENSIONS)
+        return (len(file_path) > 3 and
+                file_path[-3:] in self._ACCEPTED_EXTENSIONS)
 
     def _get_latest_file(self, path):
         latest_time = 0
@@ -47,10 +48,11 @@ class ShowScanner():
         
         if(os.path.isdir(self._SHOW_PATH)):
             for path in os.listdir(self._SHOW_PATH):
-                if(os.path.isdir(self._SHOW_PATH+path)):
+                if(os.path.isdir(self._SHOW_PATH + path)):
                     shows.append(path)
         else:
-            raise IOError("SHOW_PATH:'%s' is not a directory"%(self._SHOW_PATH))
+            raise IOError("SHOW_PATH:'%s' is not a directory"%
+                          (self._SHOW_PATH))
 
         self._show_list = shows
 
@@ -62,14 +64,15 @@ class ShowScanner():
         for show in self._show_list:
             for show_word in re.findall(r"[^ _\.]+", show):
                 show_word = str.upper(show_word)
-                if show_word in self._word_mapping.keys():
-                    self._word_mapping[show_word].append(show)
-                else:
-                    self._word_mapping[show_word] = [show]
-                
-                #TODO - Check if word is in the list?
-                words.append(show_word)
 
+                #Only add words with more than 3 chars 
+                if(len(show_word) > 3):
+                    if show_word in self._word_mapping.keys():
+                        self._word_mapping[show_word].append(show)
+                    else:
+                        self._word_mapping[show_word] = [show]
+                        words.append(show_word)
+    
         return words
 
     def get_shows(self):        
@@ -84,13 +87,3 @@ class ShowScanner():
             return latest_episode[0]
         else:
             return None
-
-    def _dir_changed(self):
-        """
-        Check if the dir has been changed since last scan
-        """
-        return True
-
-    def update_thread(self):
-        if self._dir_changed():
-            pass
