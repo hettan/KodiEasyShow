@@ -1,0 +1,9 @@
+Python 2.7 or higher
+
+RARFILE
+Download archive at https://pypi.python.org/pypi/rarfile
+unpack
+run python setup.py install (might need sudo rights as well)
+done!
+
+
