@@ -20,24 +20,25 @@ class ShowScanner():
 
     def _get_latest_file(self, path):
         latest_time = 0
-        latest_file = None
+        latest_path = None
 
         for item in os.listdir(path):
-            file_path = path+"/"+item
-            if os.path.isdir(file_path):
-                file_path, created = self._get_latest_file(file_path) 
-                if created > latest_time:
-                    latest_time = created
-                    latest_file = file_path
-            else:
-                if self._is_playable(file_path):
-                    created = os.path.getmtime(file_path)
-                    if created > latest_time:
-                        latest_time = created
-                        latest_file = file_path
-
-        return (latest_file, latest_time)
-
+            item_path = path + "/" + item
+            created = os.path.getmtime(item_path)
+            if (created > latest_time and 
+                (self._is_playable(item_path) or os.path.isdir(item_path))):
+                latest_time = created
+                latest_path = item_path
+        
+        if latest_path is None:
+            return None
+        
+        #Must find a file, recursion
+        if os.path.isdir(latest_path):
+            return self._get_latest_file(latest_path)
+        else:
+            return (latest_path, latest_time)
+            
     def _update_shows(self):
         """
         Check shows dir for shows and add them to _show_list
@@ -78,7 +79,11 @@ class ShowScanner():
         return self._word_mapping[word]
 
     def find_latest_episode(self, show):
-        return self._get_latest_file(self._SHOW_PATH + show)[0]
+        latest_episode = self._get_latest_file(self._SHOW_PATH + show)
+        if latest_episode:
+            return latest_episode[0]
+        else:
+            return None
 
     def _dir_changed(self):
         """

@@ -15,7 +15,7 @@ def most_matched(text):
     word_counter = {}
     for word in WORDS:
         #Skip words smaller then 4 chars
-        if(word < 4):
+        if(len(word) < 4):
             continue
 
         if bool(re.search(r'\b%s\b'%(word), text, re.IGNORECASE)):
@@ -46,38 +46,11 @@ def most_matched(text):
     else:
         return matched_shows[0]
         
-            
-    
-    
-
 
 def handle(text, mic, profile):
-    #found = False
-    """word_counter = {}
-    for word in WORDS:
-        if bool(re.search(r'\b%s\b'%(word), text, re.IGNORECASE)):
-            matched_shows = show_scanner.match_shows(word)
-            for show in matched_shows:
-                if show in word_counter:
-                    word_counter[show] += len(word)
-                else:
-                    word_counter[show] = len(word)
-   
-    if len(word_counter) == 0:
-        mic.say("Not found")
-    else:
-        most_matched_show = max(word_counter, key=word_counter.get)
-        mic.say("Playing %s"%(most_matched_show))
-
-        latest_episode = show_scanner.find_latest_episode(most_matched_show)
-        if latest_episode:
-            kodi_controller.play_file(latest_episode)
-        else:
-            mic.say("No episodes found")
-    """
     show = most_matched(text)
     
-    if show::
+    if show:
         latest_episode = show_scanner.find_latest_episode(most_matched_show)
         if latest_episode:
             kodi_controller.play_file(latest_episode)
@@ -93,7 +66,7 @@ def isValid(text):
 
 #Not run on import
 def main():
-    #show_word = "FAMILY"
+    show_words = "family"
     #shows = show_scanner.match_shows(show_word)
     #episode = show_scanner.find_latest_episode(shows[0])
     show = most_matched(show_words)
